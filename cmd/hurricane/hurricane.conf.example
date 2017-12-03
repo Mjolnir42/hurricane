@@ -1,0 +1,71 @@
+# hurricane example configuration
+#
+# log settings
+log: {
+        # directory to store logs in. current directory if unset
+        path: '/srv/hurricane/instance/log'
+        # log file name
+        file: 'hurricane.log'
+        # reopen logfile on signal USR2
+        rotate.on.usr2: true
+}
+
+# zookeeper settings
+zookeeper: {
+        # publish offset updates every commit.ms
+        commit.ms: 2000
+        # servers and chroot offset specification
+        connect.string: 'zk-server01:2181,zk-server02:2181/chroot/kafka'
+        # ignore the zookeeper stored kafka consumer offset
+        reset.offset.on.startup: false
+}
+
+# kafka settings
+kafka: {
+        # consumergroup to join
+        consumer.group.name: 'hurricane_instance'
+        # topics to consume
+        consumer.topics: 'twister'
+        # topic to publish derived metrics on
+        producer.topic: 'twister'
+        # producer strategy: NoResponse, WaitForLocal, WaitForAll
+        producer.response.strategy: 'WaitForLocal'
+        # producer retry attempts, default 3
+        producer.retry.attempts: 4
+        # consume from starting offset: oldest, newest
+        consumer.offset.strategy: 'newest'
+        # keepalive interval in ms
+        keepalive.ms: 4200
+}
+
+# legacy metrics settings
+legacy: {
+        # path to the metric socket
+        socket.path: '/run/hurricane.seqpacket'
+        # print metrics on STDERR
+        metrics.debug.stderr: false
+        # print metrics every n seconds
+        metrics.debug.frequency.seconds: 30
+}
+
+# misc settings
+misc: {
+        # produce metrics on metricsocket
+        produce.metrics: true
+        # instance name, will be included in metrics if set
+        instance.name: ''
+}
+
+# hurricane application settings
+hurricane: {
+        # internal handler queue length
+        handler.queue.length: 16
+        # calculate derived context switch metrics
+        derive.ctx.metrics: true
+        # calculate derived cpu metrics
+        derive.cpu.metrics: true
+        # calculate derived memory metrics
+        derive.mem.metrics: true
+        # calculate derived disk metrics
+        derive.disk.metrics: true
+}
