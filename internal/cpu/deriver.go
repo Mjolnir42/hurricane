@@ -10,6 +10,7 @@ package cpu // import "github.com/mjolnir42/hurricane/internal/cpu"
 
 import (
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/hurricane/internal/intf"
 	"github.com/mjolnir42/legacy"
 )
@@ -17,15 +18,27 @@ import (
 // Implementation of the intf.Deriver interface
 
 // NewDeriver ...
-func NewDeriver() *Deriver {
+func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.data = make(map[int64]*CPU)
+	d.lookup = eyewall.NewLookup(conf)
 	return d
 }
 
 // Deriver ...
 type Deriver struct {
-	data map[int64]*CPU
+	data   map[int64]*CPU
+	lookup *eyewall.Lookup
+}
+
+// Start ...
+func (d *Deriver) Start() error {
+	return d.lookup.Start()
+}
+
+// Close ...
+func (d *Deriver) Close() {
+	d.lookup.Close()
 }
 
 // Register ...
@@ -44,9 +57,11 @@ func (d *Deriver) Register(m map[string]intf.Deriver) {
 }
 
 // Update ...
-func (d *Deriver) Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (d *Deriver) Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	if _, ok := d.data[m.AssetID]; !ok {
-		d.data[m.AssetID] = &CPU{}
+		d.data[m.AssetID] = &CPU{
+			lookup: d.lookup,
+		}
 	}
 
 	return d.data[m.AssetID].update(m, t)

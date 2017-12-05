@@ -10,6 +10,7 @@ package mem // import "github.com/mjolnir42/hurricane/internal/mem"
 
 import (
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/hurricane/internal/intf"
 	"github.com/mjolnir42/legacy"
 )
@@ -17,15 +18,27 @@ import (
 // Implementation of the intf.Deriver interface
 
 // NewDeriver ...
-func NewDeriver() *Deriver {
+func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.Data = make(map[int64]*Mem)
+	d.lookup = eyewall.NewLookup(conf)
 	return d
 }
 
 // Deriver ...
 type Deriver struct {
-	Data map[int64]*Mem
+	Data   map[int64]*Mem
+	lookup *eyewall.Lookup
+}
+
+// Start ...
+func (d *Deriver) Start() error {
+	return d.lookup.Start()
+}
+
+// Close ...
+func (d *Deriver) Close() {
+	d.lookup.Close()
 }
 
 // Register ...
@@ -45,9 +58,11 @@ func (d *Deriver) Register(m map[string]intf.Deriver) {
 }
 
 // Update ...
-func (d *Deriver) Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (d *Deriver) Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	if _, ok := d.Data[m.AssetID]; !ok {
-		d.Data[m.AssetID] = &Mem{}
+		d.Data[m.AssetID] = &Mem{
+			lookup: d.lookup,
+		}
 	}
 
 	return d.Data[m.AssetID].update(m, t)

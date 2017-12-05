@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -29,11 +30,12 @@ type Mem struct {
 	currTime time.Time
 	nextTime time.Time
 	usage    float64
+	lookup   *eyewall.Lookup
 	ack      []*erebos.Transport
 }
 
 // Update adds mtr to the next distribution tracked by Mem
-func (m *Mem) update(mtr *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (m *Mem) update(mtr *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	// set assetID on first use
 	if m.assetID == 0 {
 		m.assetID = mtr.AssetID
@@ -42,7 +44,7 @@ func (m *Mem) update(mtr *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.Me
 	// check update has correct assetID
 	if m.assetID != mtr.AssetID {
 		// send back t so the offset gets committed
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 processing:
@@ -53,7 +55,7 @@ processing:
 
 	// out of order metric for old timestamp
 	if m.nextTime.After(mtr.TS) {
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 	// abandon current next and start new one
@@ -100,15 +102,15 @@ processing:
 // and then calculates the memory usage, moves the distribution forward
 // and returns the derived metric. If the distribution is not yet
 // complete, it returns nil.
-func (m *Mem) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (m *Mem) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 
 	if m.nextTime.IsZero() || !m.next.valid() {
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	// do not walk backwards in time
 	if m.currTime.After(m.nextTime) || m.currTime.Equal(m.nextTime) {
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	usage := big.NewRat(0, 1).SetFrac64(m.next.free, m.next.total)
@@ -118,10 +120,13 @@ func (m *Mem) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
 	m.usage = round(m.usage, .5, 2)
 
 	m.nextToCurrent()
-	derived := m.emitMetric()
+	derived, err := m.emitMetric()
+	if err != nil {
+		return nil, nil, false, err
+	}
 	acks := m.ack
 	m.ack = []*erebos.Transport{}
-	return derived, acks, true
+	return derived, acks, true, nil
 }
 
 // nextToCurrent advances the distributions within Mem by one step
@@ -135,19 +140,27 @@ func (m *Mem) nextToCurrent() {
 
 // emitMetric returns a legacy.MetricSplit for metric path
 // memory.usage.percent with the m.Usage as value
-func (m *Mem) emitMetric() []*legacy.MetricSplit {
-	return []*legacy.MetricSplit{
-		&legacy.MetricSplit{
-			AssetID: m.assetID,
-			Path:    `memory.usage.percent`,
-			TS:      m.currTime,
-			Type:    `real`,
-			Unit:    `%`,
-			Val: legacy.MetricValue{
-				FlpVal: m.usage,
-			},
+func (m *Mem) emitMetric() ([]*legacy.MetricSplit, error) {
+	mup := &legacy.MetricSplit{
+		AssetID: m.assetID,
+		Path:    `memory.usage.percent`,
+		TS:      m.currTime,
+		Type:    `real`,
+		Unit:    `%`,
+		Val: legacy.MetricValue{
+			FlpVal: m.usage,
 		},
 	}
+	if tag, err := m.lookup.GetConfigurationID(
+		mup.LookupID(),
+		mup.Path,
+	); err == nil {
+		mup.Tags = []string{tag}
+	} else if err != eyewall.ErrUnconfigured {
+		return []*legacy.MetricSplit{}, err
+	}
+
+	return []*legacy.MetricSplit{mup}, nil
 }
 
 // distribution is used to track multiple memory metrics from the same

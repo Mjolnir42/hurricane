@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -26,13 +27,14 @@ type CTX struct {
 	cps       float64
 	currTime  time.Time
 	nextTime  time.Time
+	lookup    *eyewall.Lookup
 	ack       []*erebos.Transport
 }
 
 // Update adds m to the next counter tracked by c and returns the
 // derived metric if there is a new derived metric to be computed.
 // Otherwise it returns nil.
-func (c *CTX) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (c *CTX) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	// set assetID on first use
 	if c.assetID == 0 {
 		c.assetID = m.AssetID
@@ -41,7 +43,7 @@ func (c *CTX) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.Metr
 	// check update has correct assetID
 	if c.assetID != m.AssetID {
 		// send back t so the offset gets committed
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 	// first use, store values and transport
@@ -49,12 +51,12 @@ func (c *CTX) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.Metr
 		c.currTime = m.TS
 		c.currValue = m.Value().(int64)
 		c.ack = []*erebos.Transport{t}
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	// backwards in time
 	if c.currTime.After(m.TS) || c.currTime.Equal(m.TS) {
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 	c.nextTime = m.TS
@@ -65,7 +67,7 @@ func (c *CTX) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.Metr
 
 // calculate computes the derived metric between the current and next
 // context switch counter
-func (c *CTX) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (c *CTX) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	ctx := c.nextValue - c.currValue
 	delta := c.nextTime.Sub(c.currTime).Seconds()
 
@@ -73,10 +75,13 @@ func (c *CTX) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
 	c.cps = round(c.cps, .5, 2)
 
 	c.nextToCurrent()
-	derived := c.emitMetric()
+	derived, err := c.emitMetric()
+	if err != nil {
+		return nil, nil, false, err
+	}
 	acks := c.ack
 	c.ack = []*erebos.Transport{}
-	return derived, acks, true
+	return derived, acks, true, nil
 }
 
 // nextToCurrent advances the measurement cycle within d by one step
@@ -89,19 +94,27 @@ func (c *CTX) nextToCurrent() {
 
 // emitMetric returns the derived metrics for the current measurement
 // cycle
-func (c *CTX) emitMetric() []*legacy.MetricSplit {
-	return []*legacy.MetricSplit{
-		&legacy.MetricSplit{
-			AssetID: c.assetID,
-			Path:    `ctx.per.second`,
-			TS:      c.currTime,
-			Type:    `real`,
-			Unit:    `#`,
-			Val: legacy.MetricValue{
-				FlpVal: c.cps,
-			},
+func (c *CTX) emitMetric() ([]*legacy.MetricSplit, error) {
+	cps := &legacy.MetricSplit{
+		AssetID: c.assetID,
+		Path:    `ctx.per.second`,
+		TS:      c.currTime,
+		Type:    `real`,
+		Unit:    `#`,
+		Val: legacy.MetricValue{
+			FlpVal: c.cps,
 		},
 	}
+	if tag, err := c.lookup.GetConfigurationID(
+		cps.LookupID(),
+		cps.Path,
+	); err == nil {
+		cps.Tags = []string{tag}
+	} else if err != eyewall.ErrUnconfigured {
+		return []*legacy.MetricSplit{}, err
+	}
+
+	return []*legacy.MetricSplit{cps}, nil
 }
 
 // https://gist.github.com/DavidVaini/10308388

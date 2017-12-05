@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -29,11 +30,12 @@ type CPU struct {
 	nonIdle  int64
 	total    int64
 	usage    float64
+	lookup   *eyewall.Lookup
 	ack      []*erebos.Transport
 }
 
 // Update adds m to the next counter tracked by c
-func (c *CPU) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (c *CPU) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	// set assetID on first use
 	if c.assetID == 0 {
 		c.assetID = m.AssetID
@@ -42,7 +44,7 @@ func (c *CPU) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.Metr
 	// check update has correct assetID
 	if c.assetID != m.AssetID {
 		// send back t so the offset gets committed
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 	// only process metrics tagged as cpu, not cpuN
@@ -54,7 +56,7 @@ func (c *CPU) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.Metr
 		}
 	}
 	if !cpuMetric {
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 processing:
@@ -64,7 +66,7 @@ processing:
 
 	// out of order metric for old timestamp
 	if c.nextTime.After(m.TS) {
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 	// abandon current next and start new one
@@ -108,15 +110,15 @@ processing:
 // then calculates the derived metrics, moves the counters forward and
 // returns he derived metrics. If the next counter is not yet complete,
 // it returns nil.
-func (c *CPU) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (c *CPU) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 
 	if c.nextTime.IsZero() || !c.next.valid() {
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	// do not walk backwards in time
 	if c.currTime.After(c.nextTime) || c.currTime.Equal(c.nextTime) {
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	nextIdle := c.next.idle + c.next.ioWait
@@ -130,7 +132,7 @@ func (c *CPU) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
 		c.total = nextIdle + nextNonIdle
 
 		c.nextToCurrent()
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	totalDifference := (nextIdle + nextNonIdle) - c.total
@@ -143,10 +145,13 @@ func (c *CPU) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
 	c.total = nextIdle + nextNonIdle
 
 	c.nextToCurrent()
-	derived := c.emitMetric()
+	derived, err := c.emitMetric()
+	if err != nil {
+		return nil, nil, false, err
+	}
 	acks := c.ack
 	c.ack = []*erebos.Transport{}
-	return derived, acks, true
+	return derived, acks, true, nil
 }
 
 // nextToCurrent advances the counters within c by one step
@@ -159,19 +164,26 @@ func (c *CPU) nextToCurrent() {
 }
 
 // emitMetric returns the derived metrics for the current counter
-func (c *CPU) emitMetric() []*legacy.MetricSplit {
-	return []*legacy.MetricSplit{
-		&legacy.MetricSplit{
-			AssetID: c.assetID,
-			Path:    `cpu.usage.percent`,
-			TS:      c.currTime,
-			Type:    `real`,
-			Unit:    `%`,
-			Val: legacy.MetricValue{
-				FlpVal: c.usage,
-			},
+func (c *CPU) emitMetric() ([]*legacy.MetricSplit, error) {
+	cup := &legacy.MetricSplit{
+		AssetID: c.assetID,
+		Path:    `cpu.usage.percent`,
+		TS:      c.currTime,
+		Type:    `real`,
+		Unit:    `%`,
+		Val: legacy.MetricValue{
+			FlpVal: c.usage,
 		},
 	}
+	if tag, err := c.lookup.GetConfigurationID(
+		cup.LookupID(),
+		cup.Path,
+	); err == nil {
+		cup.Tags = []string{tag}
+	} else if err != eyewall.ErrUnconfigured {
+		return []*legacy.MetricSplit{}, err
+	}
+	return []*legacy.MetricSplit{cup}, nil
 }
 
 // distribution is used to track multiple cpu metrics from the same

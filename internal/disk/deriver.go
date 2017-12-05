@@ -10,6 +10,7 @@ package disk // import "github.com/mjolnir42/hurricane/internal/disk"
 
 import (
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/hurricane/internal/intf"
 	"github.com/mjolnir42/legacy"
 )
@@ -17,15 +18,27 @@ import (
 // Implementation of the intf.Deriver interface
 
 // NewDeriver ...
-func NewDeriver() *Deriver {
+func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.data = make(map[int64]map[string]*dsk)
+	d.lookup = eyewall.NewLookup(conf)
 	return d
 }
 
 // Deriver ...
 type Deriver struct {
-	data map[int64]map[string]*dsk
+	data   map[int64]map[string]*dsk
+	lookup *eyewall.Lookup
+}
+
+// Start ...
+func (d *Deriver) Start() error {
+	return d.lookup.Start()
+}
+
+// Close ...
+func (d *Deriver) Close() {
+	d.lookup.Close()
 }
 
 // Register ...
@@ -41,10 +54,10 @@ func (d *Deriver) Register(m map[string]intf.Deriver) {
 }
 
 // Update ...
-func (d *Deriver) Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (d *Deriver) Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	if len(m.Tags) == 0 {
 		// valid disk metrics require their mountpoint as tag 0
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 	mpt := m.Tags[0]
 
@@ -53,7 +66,9 @@ func (d *Deriver) Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.
 	}
 
 	if _, ok := d.data[m.AssetID][mpt]; !ok {
-		d.data[m.AssetID][mpt] = &dsk{}
+		d.data[m.AssetID][mpt] = &dsk{
+			lookup: d.lookup,
+		}
 	}
 
 	return d.data[m.AssetID][mpt].update(m, t)

@@ -55,7 +55,7 @@ func (h *Hurricane) process(msg *erebos.Transport) {
 		return
 	}
 
-	if derived, acks, ok := h.deriver[m.Path].Update(m, msg); ok {
+	if derived, acks, ok, err := h.deriver[m.Path].Update(m, msg); ok {
 		trackingID := uuid.NewV4().String()
 		var produced int
 
@@ -97,6 +97,9 @@ func (h *Hurricane) process(msg *erebos.Transport) {
 		// store ACKs until AsyncProducer returns success
 		h.trackID[trackingID] = produced
 		h.trackACK[trackingID] = acks
+	} else if err != nil {
+		h.Death <- err
+		<-h.Shutdown
 	}
 }
 

@@ -105,23 +105,47 @@ func (h *Hurricane) Start() {
 	h.delay = delay.NewDelay()
 
 	if h.Config.Hurricane.DeriveCTX {
-		ctxDeriver := ctx.NewDeriver()
+		ctxDeriver := ctx.NewDeriver(h.Config)
+		if err := ctxDeriver.Start(); err != nil {
+			h.Death <- err
+			<-h.Shutdown
+			return
+		}
 		ctxDeriver.Register(h.deriver)
+		defer ctxDeriver.Close()
 	}
 
 	if h.Config.Hurricane.DeriveCPU {
-		cpuDeriver := cpu.NewDeriver()
+		cpuDeriver := cpu.NewDeriver(h.Config)
+		if err := cpuDeriver.Start(); err != nil {
+			h.Death <- err
+			<-h.Shutdown
+			return
+		}
 		cpuDeriver.Register(h.deriver)
+		defer cpuDeriver.Close()
 	}
 
 	if h.Config.Hurricane.DeriveMEM {
-		memDeriver := mem.NewDeriver()
+		memDeriver := mem.NewDeriver(h.Config)
+		if err := memDeriver.Start(); err != nil {
+			h.Death <- err
+			<-h.Shutdown
+			return
+		}
 		memDeriver.Register(h.deriver)
+		defer memDeriver.Close()
 	}
 
 	if h.Config.Hurricane.DeriveDISK {
-		dskDeriver := disk.NewDeriver()
+		dskDeriver := disk.NewDeriver(h.Config)
+		if err := dskDeriver.Start(); err != nil {
+			h.Death <- err
+			<-h.Shutdown
+			return
+		}
 		dskDeriver.Register(h.deriver)
+		defer dskDeriver.Close()
 	}
 
 	h.run()

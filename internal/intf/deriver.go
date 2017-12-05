@@ -22,7 +22,11 @@ type Deriver interface {
 	// Update provides the Deriver with a new input metric. If there are
 	// derived metrics or message offsets to handle it will also return
 	// true.
-	Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool)
+	Update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error)
+	// Connect the embedded redis client
+	Start() error
+	// Close the embedded redis client
+	Close()
 }
 
 // vim: ts=4 sw=4 sts=4 noet fenc=utf-8 ffs=unix

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -36,11 +37,12 @@ type dsk struct {
 	writeBps   float64
 	usage      float64
 	bytesFree  int64
+	lookup     *eyewall.Lookup
 	ack        []*erebos.Transport
 }
 
 // Update adds m to the next counter tracked by d
-func (d *dsk) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (d *dsk) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 	// set assetID and mountpoint on first use
 	if d.assetID == 0 {
 		d.assetID = m.AssetID
@@ -52,11 +54,11 @@ func (d *dsk) update(m *legacy.MetricSplit, t *erebos.Transport) ([]*legacy.Metr
 	// check update has correct assetID and mountpoint
 	if d.assetID != m.AssetID {
 		// send back t so the offset gets committed
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 	if d.mountpoint != m.Tags[0] {
 		// send back t so the offset gets committed
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 processing:
@@ -66,7 +68,7 @@ processing:
 
 	// out of order metric for old timestamp
 	if d.nextTime.After(m.TS) {
-		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true
+		return []*legacy.MetricSplit{}, []*erebos.Transport{t}, true, nil
 	}
 
 	// abandon current next and start new one
@@ -101,15 +103,15 @@ processing:
 // then calculates the derived metrics, moves the counters forward and
 // returns the derived metrics. If the next counter is not yet complete,
 // it returns nil.
-func (d *dsk) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
+func (d *dsk) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool, error) {
 
 	if d.nextTime.IsZero() || !d.next.valid() {
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	// do not walk backwards in time
 	if d.currTime.After(d.nextTime) || d.currTime.Equal(d.nextTime) {
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	usage := big.NewRat(0, 1).SetFrac64(
@@ -128,7 +130,7 @@ func (d *dsk) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
 	// this is the first update
 	if d.currTime.IsZero() {
 		d.nextToCurrent()
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	delta := d.nextTime.Sub(d.currTime).Seconds()
@@ -139,7 +141,7 @@ func (d *dsk) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
 	// counter wrapped
 	if reads < 0 || writes < 0 {
 		d.nextToCurrent()
-		return nil, nil, false
+		return nil, nil, false, nil
 	}
 
 	d.readBps = float64(reads) / delta
@@ -148,10 +150,13 @@ func (d *dsk) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool) {
 	d.writeBps = round(d.writeBps, .5, 2)
 
 	d.nextToCurrent()
-	derived := d.emitMetric()
+	derived, err := d.emitMetric()
+	if err != nil {
+		return nil, nil, false, err
+	}
 	acks := d.ack
 	d.ack = []*erebos.Transport{}
-	return derived, acks, true
+	return derived, acks, true, nil
 }
 
 // nextToCurrent advances the counters within d by one step
@@ -164,53 +169,88 @@ func (d *dsk) nextToCurrent() {
 }
 
 // emitMetric returns the derived metrics for the current counter
-func (d *dsk) emitMetric() []*legacy.MetricSplit {
-	return []*legacy.MetricSplit{
-		&legacy.MetricSplit{
-			AssetID: d.assetID,
-			Path: fmt.Sprintf("disk.write.per.second:%s",
-				d.mountpoint),
-			TS:   d.currTime,
-			Type: `real`,
-			Unit: `B`,
-			Val: legacy.MetricValue{
-				FlpVal: d.writeBps,
-			},
-		},
-		&legacy.MetricSplit{
-			AssetID: d.assetID,
-			Path: fmt.Sprintf("disk.read.per.second:%s",
-				d.mountpoint),
-			TS:   d.currTime,
-			Type: `real`,
-			Unit: `B`,
-			Val: legacy.MetricValue{
-				FlpVal: d.readBps,
-			},
-		},
-		&legacy.MetricSplit{
-			AssetID: d.assetID,
-			Path: fmt.Sprintf("disk.free:%s",
-				d.mountpoint),
-			TS:   d.currTime,
-			Type: `integer`,
-			Unit: `B`,
-			Val: legacy.MetricValue{
-				IntVal: d.bytesFree,
-			},
-		},
-		&legacy.MetricSplit{
-			AssetID: d.assetID,
-			Path: fmt.Sprintf("disk.usage.percent:%s",
-				d.mountpoint),
-			TS:   d.currTime,
-			Type: `real`,
-			Unit: `%`,
-			Val: legacy.MetricValue{
-				FlpVal: d.usage,
-			},
+func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
+	dwps := &legacy.MetricSplit{
+		AssetID: d.assetID,
+		Path: fmt.Sprintf("disk.write.per.second:%s",
+			d.mountpoint),
+		TS:   d.currTime,
+		Type: `real`,
+		Unit: `B`,
+		Val: legacy.MetricValue{
+			FlpVal: d.writeBps,
 		},
 	}
+	if tag, err := d.lookup.GetConfigurationID(
+		dwps.LookupID(),
+		dwps.Path,
+	); err == nil {
+		dwps.Tags = []string{tag}
+	} else if err != eyewall.ErrUnconfigured {
+		return []*legacy.MetricSplit{}, err
+	}
+
+	drps := &legacy.MetricSplit{
+		AssetID: d.assetID,
+		Path: fmt.Sprintf("disk.read.per.second:%s",
+			d.mountpoint),
+		TS:   d.currTime,
+		Type: `real`,
+		Unit: `B`,
+		Val: legacy.MetricValue{
+			FlpVal: d.readBps,
+		},
+	}
+	if tag, err := d.lookup.GetConfigurationID(
+		drps.LookupID(),
+		drps.Path,
+	); err == nil {
+		drps.Tags = []string{tag}
+	} else if err != eyewall.ErrUnconfigured {
+		return []*legacy.MetricSplit{}, err
+	}
+
+	df := &legacy.MetricSplit{
+		AssetID: d.assetID,
+		Path: fmt.Sprintf("disk.free:%s",
+			d.mountpoint),
+		TS:   d.currTime,
+		Type: `integer`,
+		Unit: `B`,
+		Val: legacy.MetricValue{
+			IntVal: d.bytesFree,
+		},
+	}
+	if tag, err := d.lookup.GetConfigurationID(
+		df.LookupID(),
+		df.Path,
+	); err == nil {
+		df.Tags = []string{tag}
+	} else if err != eyewall.ErrUnconfigured {
+		return []*legacy.MetricSplit{}, err
+	}
+
+	dup := &legacy.MetricSplit{
+		AssetID: d.assetID,
+		Path: fmt.Sprintf("disk.usage.percent:%s",
+			d.mountpoint),
+		TS:   d.currTime,
+		Type: `real`,
+		Unit: `%`,
+		Val: legacy.MetricValue{
+			FlpVal: d.usage,
+		},
+	}
+	if tag, err := d.lookup.GetConfigurationID(
+		dup.LookupID(),
+		dup.Path,
+	); err == nil {
+		dup.Tags = []string{tag}
+	} else if err != eyewall.ErrUnconfigured {
+		return []*legacy.MetricSplit{}, err
+	}
+
+	return []*legacy.MetricSplit{dwps, drps, df, dup}, nil
 }
 
 // distribution is used to track multiple disk metrics from the same
