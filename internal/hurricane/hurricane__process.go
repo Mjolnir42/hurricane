@@ -60,10 +60,10 @@ func (h *Hurricane) process(msg *erebos.Transport) {
 		var produced int
 
 		for i := range derived {
-			data, err := json.Marshal(&derived[i])
-			if err != nil {
+			data, e := json.Marshal(&derived[i])
+			if e != nil {
 				logrus.Warnf("Ignoring invalid data: %s",
-					err.Error())
+					e.Error())
 				logrus.Debugln(`Ignored data:`, derived[i])
 				continue
 			}
@@ -98,6 +98,7 @@ func (h *Hurricane) process(msg *erebos.Transport) {
 		h.trackID[trackingID] = produced
 		h.trackACK[trackingID] = acks
 	} else if err != nil {
+		// error from the eyewall lookup
 		h.Death <- err
 		<-h.Shutdown
 	}
