@@ -105,11 +105,10 @@ func (c *CTX) emitMetric() ([]*legacy.MetricSplit, error) {
 			FlpVal: c.cps,
 		},
 	}
-	if tag, err := c.lookup.GetConfigurationID(
+	if tags, err := c.lookup.GetConfigurationID(
 		cps.LookupID(),
-		cps.Path,
 	); err == nil {
-		cps.Tags = []string{tag}
+		cps.Tags = tags
 	} else if err != eyewall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}

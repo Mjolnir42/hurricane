@@ -175,11 +175,10 @@ func (c *CPU) emitMetric() ([]*legacy.MetricSplit, error) {
 			FlpVal: c.usage,
 		},
 	}
-	if tag, err := c.lookup.GetConfigurationID(
+	if tags, err := c.lookup.GetConfigurationID(
 		cup.LookupID(),
-		cup.Path,
 	); err == nil {
-		cup.Tags = []string{tag}
+		cup.Tags = tags
 	} else if err != eyewall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}

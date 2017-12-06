@@ -181,11 +181,10 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 			FlpVal: d.writeBps,
 		},
 	}
-	if tag, err := d.lookup.GetConfigurationID(
+	if tags, err := d.lookup.GetConfigurationID(
 		dwps.LookupID(),
-		dwps.Path,
 	); err == nil {
-		dwps.Tags = []string{tag}
+		dwps.Tags = tags
 	} else if err != eyewall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
@@ -201,11 +200,10 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 			FlpVal: d.readBps,
 		},
 	}
-	if tag, err := d.lookup.GetConfigurationID(
+	if tags, err := d.lookup.GetConfigurationID(
 		drps.LookupID(),
-		drps.Path,
 	); err == nil {
-		drps.Tags = []string{tag}
+		drps.Tags = tags
 	} else if err != eyewall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
@@ -221,11 +219,10 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 			IntVal: d.bytesFree,
 		},
 	}
-	if tag, err := d.lookup.GetConfigurationID(
+	if tags, err := d.lookup.GetConfigurationID(
 		df.LookupID(),
-		df.Path,
 	); err == nil {
-		df.Tags = []string{tag}
+		df.Tags = tags
 	} else if err != eyewall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
@@ -241,11 +238,10 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 			FlpVal: d.usage,
 		},
 	}
-	if tag, err := d.lookup.GetConfigurationID(
+	if tags, err := d.lookup.GetConfigurationID(
 		dup.LookupID(),
-		dup.Path,
 	); err == nil {
-		dup.Tags = []string{tag}
+		dup.Tags = tags
 	} else if err != eyewall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}

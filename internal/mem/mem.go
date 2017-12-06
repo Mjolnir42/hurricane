@@ -151,11 +151,10 @@ func (m *Mem) emitMetric() ([]*legacy.MetricSplit, error) {
 			FlpVal: m.usage,
 		},
 	}
-	if tag, err := m.lookup.GetConfigurationID(
+	if tags, err := m.lookup.GetConfigurationID(
 		mup.LookupID(),
-		mup.Path,
 	); err == nil {
-		mup.Tags = []string{tag}
+		mup.Tags = tags
 	} else if err != eyewall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
