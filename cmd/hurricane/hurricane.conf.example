@@ -58,6 +58,25 @@ misc: {
         instance.name: ''
 }
 
+# profile server settings
+eyewall: {
+        host: 'localhost'
+        port: '7777'
+        path: 'api/v1/configuration'
+}
+
+# redis cache settings
+redis: {
+        # redis server address
+        connect: 'localhost:6379'
+        # redis database to store records in
+        db: '0'
+        # redis connect password
+        password: 'sikrit'
+        # expire time for cache records
+        cache.timeout.seconds: 1800
+}
+
 # hurricane application settings
 hurricane: {
         # internal handler queue length
