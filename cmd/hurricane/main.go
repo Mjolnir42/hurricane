@@ -11,6 +11,8 @@ package main // import "github.com/mjolnir42/hurricane/cmd/hurricane"
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -35,6 +37,9 @@ func init() {
 
 	// set standard logger options
 	erebos.SetLogrusOptions()
+
+	// redirect go default logger to /dev/null
+	log.SetOutput(ioutil.Discard)
 }
 
 func main() {
