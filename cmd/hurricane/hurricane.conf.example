@@ -8,6 +8,8 @@ log: {
         file: 'hurricane.log'
         # reopen logfile on signal USR2
         rotate.on.usr2: true
+        # verbose logging
+        debug: false
 }
 
 # zookeeper settings

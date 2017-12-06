@@ -81,6 +81,13 @@ func main() {
 	logrus.SetOutput(conf.Log.FH)
 	logrus.Infoln(`Starting HURRICANE...`)
 
+	// switch to requested loglevel
+	if conf.Log.Debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetLevel(logrus.WarnLevel)
+	}
+
 	// signal handler will reopen logfile on USR2 if requested
 	if conf.Log.Rotate {
 		sigChanLogRotate := make(chan os.Signal, 1)
