@@ -10,6 +10,7 @@ package hurricane // import "github.com/mjolnir42/hurricane/internal/hurricane"
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/Shopify/sarama"
@@ -31,6 +32,24 @@ func (h *Hurricane) process(msg *erebos.Transport) {
 				h.delay.Done()
 			}()
 		}
+		return
+	}
+
+	// handle heartbeat messages
+	if erebos.IsHeartbeat(msg) {
+		h.delay.Use()
+		go func() {
+			h.lookup.Heartbeat(func() string {
+				switch h.Config.Misc.InstanceName {
+				case ``:
+					return `hurricane`
+				default:
+					return fmt.Sprintf("hurricane/%s",
+						h.Config.Misc.InstanceName)
+				}
+			}(), h.Num, msg.Value)
+			h.delay.Done()
+		}()
 		return
 	}
 

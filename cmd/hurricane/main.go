@@ -169,6 +169,8 @@ func main() {
 		)
 	}()
 
+	heartbeat := time.Tick(10 * time.Second)
+
 	// the main loop
 	fault := false
 runloop:
@@ -183,6 +185,15 @@ runloop:
 			logrus.Errorf("Handler died: %s", err.Error())
 			fault = true
 			break runloop
+		case <-heartbeat:
+			for i := range hurricane.Handlers {
+				// do not block on heartbeats
+				waitdelay.Use()
+				go func(i int) {
+					hurricane.Handlers[i].InputChannel() <- erebos.NewHeartbeat()
+					waitdelay.Done()
+				}(i)
+			}
 		}
 	}
 

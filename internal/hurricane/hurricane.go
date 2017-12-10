@@ -14,6 +14,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/mjolnir42/delay"
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/hurricane/internal/intf"
 	metrics "github.com/rcrowley/go-metrics"
 )
@@ -43,6 +44,7 @@ type Hurricane struct {
 	trackACK map[string][]*erebos.Transport
 	dispatch chan<- *sarama.ProducerMessage
 	producer sarama.AsyncProducer
+	lookup   *eyewall.Lookup
 }
 
 // updateOffset updates the consumer offsets in Kafka once all

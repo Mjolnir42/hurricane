@@ -16,6 +16,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/mjolnir42/delay"
 	"github.com/mjolnir42/erebos"
+	"github.com/mjolnir42/eyewall"
 	"github.com/mjolnir42/hurricane/internal/cpu"
 	"github.com/mjolnir42/hurricane/internal/ctx"
 	"github.com/mjolnir42/hurricane/internal/disk"
@@ -103,6 +104,9 @@ func (h *Hurricane) Start() {
 	}
 	h.dispatch = h.producer.Input()
 	h.delay = delay.NewDelay()
+
+	h.lookup = eyewall.NewLookup(h.Config)
+	defer h.lookup.Close()
 
 	if h.Config.Hurricane.DeriveCTX {
 		ctxDeriver := ctx.NewDeriver(h.Config)
