@@ -103,7 +103,7 @@ func (h *Hurricane) Start() {
 		return
 	}
 	h.dispatch = h.producer.Input()
-	h.delay = delay.NewDelay()
+	h.delay = delay.New()
 
 	h.lookup = eyewall.NewLookup(h.Config)
 	defer h.lookup.Close()
