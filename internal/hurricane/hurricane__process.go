@@ -75,7 +75,7 @@ func (h *Hurricane) process(msg *erebos.Transport) {
 	}
 
 	if derived, acks, ok, err := h.deriver[m.Path].Update(m, msg); ok {
-		trackingID := uuid.NewV4().String()
+		trackingID := uuid.Must(uuid.NewV4()).String()
 		var produced int
 
 		for i := range derived {
