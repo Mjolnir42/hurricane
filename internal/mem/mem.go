@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/eyewall"
+	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -30,7 +30,7 @@ type Mem struct {
 	currTime time.Time
 	nextTime time.Time
 	usage    float64
-	lookup   *eyewall.Lookup
+	lookup   *wall.Lookup
 	ack      []*erebos.Transport
 }
 
@@ -155,7 +155,7 @@ func (m *Mem) emitMetric() ([]*legacy.MetricSplit, error) {
 		mup.LookupID(),
 	); err == nil {
 		mup.Tags = tags
-	} else if err != eyewall.ErrUnconfigured {
+	} else if err != wall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
 

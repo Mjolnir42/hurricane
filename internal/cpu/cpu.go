@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/eyewall"
+	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -30,7 +30,7 @@ type CPU struct {
 	nonIdle  int64
 	total    int64
 	usage    float64
-	lookup   *eyewall.Lookup
+	lookup   *wall.Lookup
 	ack      []*erebos.Transport
 }
 
@@ -179,7 +179,7 @@ func (c *CPU) emitMetric() ([]*legacy.MetricSplit, error) {
 		cup.LookupID(),
 	); err == nil {
 		cup.Tags = tags
-	} else if err != eyewall.ErrUnconfigured {
+	} else if err != wall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
 	return []*legacy.MetricSplit{cup}, nil

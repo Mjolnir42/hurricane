@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/eyewall"
+	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -37,7 +37,7 @@ type dsk struct {
 	writeBps   float64
 	usage      float64
 	bytesFree  int64
-	lookup     *eyewall.Lookup
+	lookup     *wall.Lookup
 	ack        []*erebos.Transport
 }
 
@@ -185,7 +185,7 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 		dwps.LookupID(),
 	); err == nil {
 		dwps.Tags = tags
-	} else if err != eyewall.ErrUnconfigured {
+	} else if err != wall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
 
@@ -204,7 +204,7 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 		drps.LookupID(),
 	); err == nil {
 		drps.Tags = tags
-	} else if err != eyewall.ErrUnconfigured {
+	} else if err != wall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
 
@@ -223,7 +223,7 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 		df.LookupID(),
 	); err == nil {
 		df.Tags = tags
-	} else if err != eyewall.ErrUnconfigured {
+	} else if err != wall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
 
@@ -242,7 +242,7 @@ func (d *dsk) emitMetric() ([]*legacy.MetricSplit, error) {
 		dup.LookupID(),
 	); err == nil {
 		dup.Tags = tags
-	} else if err != eyewall.ErrUnconfigured {
+	} else if err != wall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
 

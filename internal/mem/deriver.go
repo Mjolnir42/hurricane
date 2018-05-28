@@ -10,7 +10,7 @@ package mem // import "github.com/mjolnir42/hurricane/internal/mem"
 
 import (
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/eyewall"
+	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/hurricane/internal/intf"
 	"github.com/mjolnir42/legacy"
 )
@@ -21,14 +21,14 @@ import (
 func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.Data = make(map[int64]*Mem)
-	d.lookup = eyewall.NewLookup(conf)
+	d.lookup = wall.NewLookup(conf)
 	return d
 }
 
 // Deriver ...
 type Deriver struct {
 	Data   map[int64]*Mem
-	lookup *eyewall.Lookup
+	lookup *wall.Lookup
 }
 
 // Start ...

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/eyewall"
+	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
 )
 
@@ -27,7 +27,7 @@ type CTX struct {
 	cps       float64
 	currTime  time.Time
 	nextTime  time.Time
-	lookup    *eyewall.Lookup
+	lookup    *wall.Lookup
 	ack       []*erebos.Transport
 }
 
@@ -109,7 +109,7 @@ func (c *CTX) emitMetric() ([]*legacy.MetricSplit, error) {
 		cps.LookupID(),
 	); err == nil {
 		cps.Tags = tags
-	} else if err != eyewall.ErrUnconfigured {
+	} else if err != wall.ErrUnconfigured {
 		return []*legacy.MetricSplit{}, err
 	}
 

@@ -10,7 +10,7 @@ package disk // import "github.com/mjolnir42/hurricane/internal/disk"
 
 import (
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/eyewall"
+	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/hurricane/internal/intf"
 	"github.com/mjolnir42/legacy"
 )
@@ -21,14 +21,14 @@ import (
 func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.data = make(map[int64]map[string]*dsk)
-	d.lookup = eyewall.NewLookup(conf)
+	d.lookup = wall.NewLookup(conf)
 	return d
 }
 
 // Deriver ...
 type Deriver struct {
 	data   map[int64]map[string]*dsk
-	lookup *eyewall.Lookup
+	lookup *wall.Lookup
 }
 
 // Start ...
