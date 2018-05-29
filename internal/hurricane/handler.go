@@ -105,7 +105,7 @@ func (h *Hurricane) Start() {
 	h.dispatch = h.producer.Input()
 	h.delay = delay.New()
 
-	h.lookup = wall.NewLookup(h.Config)
+	h.lookup = wall.NewLookup(h.Config, `hurricane`)
 	defer h.lookup.Close()
 
 	if h.Config.Hurricane.DeriveCTX {

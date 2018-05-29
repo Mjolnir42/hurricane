@@ -21,7 +21,7 @@ import (
 func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.data = make(map[int64]*CPU)
-	d.lookup = wall.NewLookup(conf)
+	d.lookup = wall.NewLookup(conf, `hurricane/cpu`)
 	return d
 }
 
