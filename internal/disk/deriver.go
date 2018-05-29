@@ -21,7 +21,7 @@ import (
 func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.data = make(map[int64]map[string]*dsk)
-	d.lookup = wall.NewLookup(conf, `hurricane/disk`)
+	d.lookup = wall.NewLookup(conf, `hurricane`)
 	return d
 }
 

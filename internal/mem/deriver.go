@@ -21,7 +21,7 @@ import (
 func NewDeriver(conf *erebos.Config) *Deriver {
 	d := &Deriver{}
 	d.Data = make(map[int64]*Mem)
-	d.lookup = wall.NewLookup(conf, `hurricane/mem`)
+	d.lookup = wall.NewLookup(conf, `hurricane`)
 	return d
 }
 
