@@ -232,7 +232,7 @@ func (n *netIf) calculate() ([]*legacy.MetricSplit, []*erebos.Transport, bool, e
 	n.txPPS = float64(txPackets) / deltaSeconds
 
 	// only calculate utilizations if the device attributes are known
-	if _, ok := deviceAttributes[n.speed]; ok {
+	if _, ok := deviceAttributes[n.speed]; ok && n.intf != `lo` {
 		// calculate incoming bandwidth utilization
 		rxUtilizationBPS := big.NewRat(0, 1).SetFrac64(
 			int64(n.rxBPS)*bitsPerByte,
@@ -417,7 +417,7 @@ func (n *netIf) emitMetric() ([]*legacy.MetricSplit, error) {
 	result := []*legacy.MetricSplit{nRxBPS, nTxBPS, nRxPPS, nTxPPS, nRxSize, nTxSize}
 
 	// return result if utilizations have not been calculated
-	if _, ok := deviceAttributes[n.speed]; !ok {
+	if _, ok := deviceAttributes[n.speed]; !ok || n.intf == `lo` {
 		return result, nil
 	}
 
