@@ -89,4 +89,6 @@ hurricane: {
         derive.mem.metrics: true
         # calculate derived disk metrics
         derive.disk.metrics: true
+        # calculate derived network interface metrics
+        derive.netif.metrics: true
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/mjolnir42/hurricane/internal/ctx"
 	"github.com/mjolnir42/hurricane/internal/disk"
 	"github.com/mjolnir42/hurricane/internal/mem"
+	"github.com/mjolnir42/hurricane/internal/netif"
 	kazoo "github.com/wvanbergen/kazoo-go"
 )
 
@@ -150,6 +151,17 @@ func (h *Hurricane) Start() {
 		}
 		dskDeriver.Register(h.deriver)
 		defer dskDeriver.Close()
+	}
+
+	if h.Config.Hurricane.DeriveNETIF {
+		netifDeriver := netif.NewDeriver(h.Config)
+		if err := netifDeriver.Start(); err != nil {
+			h.Death <- err
+			<-h.Shutdown
+			return
+		}
+		netifDeriver.Register(h.deriver)
+		defer netifDeriver.Close()
 	}
 
 	h.run()
