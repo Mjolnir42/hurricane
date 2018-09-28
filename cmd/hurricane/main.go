@@ -6,7 +6,7 @@
  * that can be found in the LICENSE file.
  */
 
-package main // import "github.com/mjolnir42/hurricane/cmd/hurricane"
+package main // import "github.com/solnx/hurricane/cmd/hurricane"
 
 import (
 	"flag"
@@ -24,9 +24,9 @@ import (
 	"github.com/client9/reopen"
 	"github.com/mjolnir42/delay"
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/hurricane/internal/hurricane"
 	"github.com/mjolnir42/legacy"
 	metrics "github.com/rcrowley/go-metrics"
+	"github.com/solnx/hurricane/internal/hurricane"
 )
 
 var githash, shorthash, builddate, buildtime string

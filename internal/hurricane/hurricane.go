@@ -7,16 +7,16 @@
  */
 
 // Package hurricane calculates derived metrics
-package hurricane // import "github.com/mjolnir42/hurricane/internal/hurricane"
+package hurricane // import "github.com/solnx/hurricane/internal/hurricane"
 
 import (
 	"github.com/Shopify/sarama"
 	"github.com/Sirupsen/logrus"
 	"github.com/mjolnir42/delay"
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
-	"github.com/mjolnir42/hurricane/internal/intf"
 	metrics "github.com/rcrowley/go-metrics"
+	wall "github.com/solnx/eye/lib/eye.wall"
+	"github.com/solnx/hurricane/internal/intf"
 )
 
 // Handlers is the registry of running application handlers

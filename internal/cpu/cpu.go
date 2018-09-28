@@ -8,15 +8,15 @@
 
 // Package cpu provides the following derived metrics:
 //	- cpu.usage.percent
-package cpu // import "github.com/mjolnir42/hurricane/internal/cpu"
+package cpu // import "github.com/solnx/hurricane/internal/cpu"
 
 import (
 	"math"
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
+	wall "github.com/solnx/eye/lib/eye.wall"
 )
 
 // CPU implements the logic to compute derived cpu usage metrics

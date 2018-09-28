@@ -6,7 +6,7 @@
  * that can be found in the LICENSE file.
  */
 
-package hurricane // import "github.com/mjolnir42/hurricane/internal/hurricane"
+package hurricane // import "github.com/solnx/hurricane/internal/hurricane"
 
 import (
 	"encoding/json"

@@ -8,15 +8,15 @@
 
 // Package ctx provides the following derived metrics:
 //	- ctx.per.second
-package ctx // import "github.com/mjolnir42/hurricane/internal/ctx"
+package ctx // import "github.com/solnx/hurricane/internal/ctx"
 
 import (
 	"math"
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
+	wall "github.com/solnx/eye/lib/eye.wall"
 )
 
 // CTX implements the logic to compute derived context switch metrics

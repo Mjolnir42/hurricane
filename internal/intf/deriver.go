@@ -8,7 +8,7 @@
 
 // Package intf provides interface definitions without causing an import
 // loop
-package intf // import "github.com/mjolnir42/hurricane/internal/intf"
+package intf // import "github.com/solnx/hurricane/internal/intf"
 
 import (
 	"github.com/mjolnir42/erebos"

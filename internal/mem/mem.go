@@ -8,7 +8,7 @@
 
 // Package mem provides the following derived metrics:
 //	- memory.usage.percent
-package mem // import "github.com/mjolnir42/hurricane/internal/mem"
+package mem // import "github.com/solnx/hurricane/internal/mem"
 
 import (
 	"math"
@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
+	wall "github.com/solnx/eye/lib/eye.wall"
 )
 
 // Mem implements the metric evaluation and accounting for monitoring

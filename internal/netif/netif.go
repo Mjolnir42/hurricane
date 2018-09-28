@@ -18,7 +18,7 @@
 //	- net.tx.packet.rate.utilization.percent:%dev
 //	- net.tx.packets.per.second:%dev
 //	- net.utilization.percent:%dev
-package netif // import "github.com/mjolnir42/hurricane/internal/netif"
+package netif // import "github.com/solnx/hurricane/internal/netif"
 
 import (
 	"fmt"
@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
+	wall "github.com/solnx/eye/lib/eye.wall"
 )
 
 // deviceAttributes contains Ethernet characteristics needed for

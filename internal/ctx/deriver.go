@@ -6,13 +6,13 @@
  * that can be found in the LICENSE file.
  */
 
-package ctx // import "github.com/mjolnir42/hurricane/internal/ctx"
+package ctx // import "github.com/solnx/hurricane/internal/ctx"
 
 import (
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
-	"github.com/mjolnir42/hurricane/internal/intf"
 	"github.com/mjolnir42/legacy"
+	wall "github.com/solnx/eye/lib/eye.wall"
+	"github.com/solnx/hurricane/internal/intf"
 )
 
 // Implementation of the intf.Deriver interface

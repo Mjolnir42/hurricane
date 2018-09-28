@@ -6,7 +6,7 @@
  * that can be found in the LICENSE file.
  */
 
-package hurricane // import "github.com/mjolnir42/hurricane/internal/hurricane"
+package hurricane // import "github.com/solnx/hurricane/internal/hurricane"
 
 import (
 	"fmt"
@@ -16,12 +16,12 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/mjolnir42/delay"
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
-	"github.com/mjolnir42/hurricane/internal/cpu"
-	"github.com/mjolnir42/hurricane/internal/ctx"
-	"github.com/mjolnir42/hurricane/internal/disk"
-	"github.com/mjolnir42/hurricane/internal/mem"
-	"github.com/mjolnir42/hurricane/internal/netif"
+	wall "github.com/solnx/eye/lib/eye.wall"
+	"github.com/solnx/hurricane/internal/cpu"
+	"github.com/solnx/hurricane/internal/ctx"
+	"github.com/solnx/hurricane/internal/disk"
+	"github.com/solnx/hurricane/internal/mem"
+	"github.com/solnx/hurricane/internal/netif"
 	kazoo "github.com/wvanbergen/kazoo-go"
 )
 

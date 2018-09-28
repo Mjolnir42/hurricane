@@ -11,7 +11,7 @@
 //	- disk.read.per.second
 //	- disk.free
 //	- disk.usage.percent
-package disk // import "github.com/mjolnir42/hurricane/internal/disk"
+package disk // import "github.com/solnx/hurricane/internal/disk"
 
 import (
 	"fmt"
@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	wall "github.com/mjolnir42/eye/lib/eye.wall"
 	"github.com/mjolnir42/legacy"
+	wall "github.com/solnx/eye/lib/eye.wall"
 )
 
 // dsk implements the logic to compute derived disk metrics
