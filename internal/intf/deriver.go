@@ -12,7 +12,7 @@ package intf // import "github.com/solnx/hurricane/internal/intf"
 
 import (
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/legacy"
+	"github.com/solnx/legacy"
 )
 
 // Deriver is the interface for packages that calculate derived metrics

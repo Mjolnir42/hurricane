@@ -10,9 +10,9 @@ package cpu // import "github.com/solnx/hurricane/internal/cpu"
 
 import (
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/legacy"
 	wall "github.com/solnx/eye/lib/eye.wall"
 	"github.com/solnx/hurricane/internal/intf"
+	"github.com/solnx/legacy"
 )
 
 // Implementation of the intf.Deriver interface

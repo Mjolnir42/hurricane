@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mjolnir42/legacy"
 	metrics "github.com/rcrowley/go-metrics"
+	"github.com/solnx/legacy"
 )
 
 // Implementation of the legacy.Formatter interface

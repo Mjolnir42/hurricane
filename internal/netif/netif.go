@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/legacy"
 	wall "github.com/solnx/eye/lib/eye.wall"
+	"github.com/solnx/legacy"
 )
 
 // deviceAttributes contains Ethernet characteristics needed for

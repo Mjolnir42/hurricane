@@ -24,9 +24,9 @@ import (
 	"github.com/client9/reopen"
 	"github.com/mjolnir42/delay"
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/legacy"
 	metrics "github.com/rcrowley/go-metrics"
 	"github.com/solnx/hurricane/internal/hurricane"
+	"github.com/solnx/legacy"
 )
 
 var githash, shorthash, builddate, buildtime string

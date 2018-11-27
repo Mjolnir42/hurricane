@@ -16,8 +16,8 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/Sirupsen/logrus"
 	"github.com/mjolnir42/erebos"
-	"github.com/mjolnir42/legacy"
 	uuid "github.com/satori/go.uuid"
+	"github.com/solnx/legacy"
 )
 
 // process is the handler for deriving metrics and producing the
