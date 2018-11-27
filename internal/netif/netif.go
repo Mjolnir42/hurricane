@@ -42,11 +42,13 @@ const (
 	maxFPS100MbE = 148809
 	maxFPS1GbE   = 1488096
 	maxFPS10GbE  = 14880952
+	maxFPS100GbE = 148809524
 	// maximum bit per second constants for different Ethernet types
 	maxBitPS10MbE  = 10000000
 	maxBitPS100MbE = 100000000
 	maxBitPS1GbE   = 1000000000
 	maxBitPS10GbE  = 10000000000
+	maxBitPS100GbE = 100000000000
 	// makes it obvious during calculation what conversion is being
 	// applied
 	bitsPerByte = 8
@@ -69,6 +71,10 @@ func init() {
 		10000: map[string]int64{
 			`fps`: maxFPS10GbE,
 			`bps`: maxBitPS10GbE,
+		},
+		100000: map[string]int64{
+			`fps`: maxFPS100GbE,
+			`bps`: maxBitPS100GbE,
 		},
 	}
 }
